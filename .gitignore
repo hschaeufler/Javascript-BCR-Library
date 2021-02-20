@@ -87,3 +87,10 @@ $RECYCLE.BIN/
 *.lnk
 /.vs
 /sample/dataset
+
+
+#dist-Folder
+dist
+
+#nodemodules
+node_modules

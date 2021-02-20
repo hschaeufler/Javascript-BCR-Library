@@ -28,7 +28,7 @@
 // ************************************************************
 // Enum values
 // ************************************************************
-const languages = {
+export const languages = {
     DANISH: "dan",
     GERMAN: "deu",
     ENGLISH: "eng",
@@ -38,11 +38,11 @@ const languages = {
     SWEDISH: "swe"
 };
 
-const cropStrategy = {
+export const cropStrategy = {
     SMART: "smartcrop"
 };
 
-const ocrEngines = {
+export const ocrEngines = {
     TESSERACT: "tesseract",
     GOOGLEVISION: "google"
 };
@@ -55,7 +55,7 @@ let languagesDS = {};
 // ****************************************************************************
 // BCR main class
 // ****************************************************************************
-let bcr = (function () {
+export let bcr = (function () {
 
     // ************************************************************
     // private properties (defaults)
@@ -64,9 +64,9 @@ let bcr = (function () {
     let defaultMaxHeight = 1440;
     let defaultLanguage = languages.GERMAN;
     let defaultCropStrategy = cropStrategy.SMART;
-    let defaultQRScanner = true;
+    let defaultQRScanner = false;
     let defaultOcrEngine = ocrEngines.TESSERACT;
-    let defaultDynamicInclude = true;
+    let defaultDynamicInclude = false;
     let inputOcr = "";
     let tesseractWorker;
 
@@ -414,3 +414,5 @@ let bcr = (function () {
 
     };
 })();
+
+export default bcr;

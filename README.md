@@ -1,211 +1,35 @@
-# [Javascript BCR Library](https://github.com/syneo-tools-gmbh/Javascript-BCR-Library) 1.0.12
-## Authors: Gaspare Ferraro, Renzo Sala, Simone Ponte, Paolo Macco
+# This is a Fork of [Javascript BCR Library](https://github.com/syneo-tools-gmbh/Javascript-BCR-Library) 1.0.12
 
-BCR Library is a javascript library, using the OCR engine Tesseract.JS, that extracts name, company name, job, address, phone numbers, email and web address out of a business card picture.
+## Using the Lib
+For further Information regarding the Library-Use please visit:  [Javascript BCR Library](https://github.com/syneo-tools-gmbh/Javascript-BCR-Library)
 
-The library is written in Javascript and can be used in any Javascript project (included in projects using frameworks for hybrid mobile applications, like Apache Cordova, Phonegap or Ionic).
+Many thanks to the original authors
 
-The library can be used offline, no online dependencies are required.
+The Authors of the original Library are: **Gaspare Ferraro, Renzo Sala, Simone Ponte, Paolo Macco**
 
-# Installation
-Copy the content of the repository and reference bcr via `script` tag in your HTML project:
-  
-```html
-<script type="text/javascript" src="src/bcr.js"></script>
-```
+As far I can tell, the Javascript BCR Library is licensed using the Apache Licences Version 2.0. For further information please visit [Javascript BCR Library](https://github.com/syneo-tools-gmbh/Javascript-BCR-Library) and have a Look at `LICENSE.md`.
 
-# Sample
-The sample application in the repository must be executed on a web server.
+## Why the fork?
+I am currently developing a business card reader as a PWA for a project at my university. 
 
-If you have python it's enough to run `python -m http.server 8000` in the project folder.
+I have used create-react-app to create the app. Since create-react-app is based on Babel and eslint the BCR library has not yet been implemented as a JavaScript module, this caused a few problems.
 
-If you use cordova, you can add the `browser` platform and run it (it works on other platforms like Android or iOS too).
+To simplify the integration, I use `grunt` (and the plugin `grunt-contrib-uglify-es`) to pack all the JavaScript files into a bundle file that is stored in the `dist` folder. `bcr.min.js` does not contain a QR code lib. To use the QR code functionality, `bcr.qr.min.js` must be used.
 
-# Reference
+The language training data from `tesseract.js` is copied (using `grunt-contrib-copy` ) to the `dist/data/` folder.
 
-## Methods
-### Init methods
+`languages`, `cropStrategy`, `ocrEngines`, `bcr` are now exported and can be included using the import statement.
+
+In addition, the two bundle files gets a corresponding header with instructions for `eslint`.
+
+Furthermore, the default for `defaultDynamicInclude` and `defaultQRScanner` are set to `false`.
 
 
-```javascript
-bcr.initialize(ocrEngine, crop, language, width, height, QRScanner, dynamicInclude);
-```
+## How to use?
+Clone the repository and use `npm install` to resolve the dependencies. 
 
-Initialize the bcr reader.
-If ocrEngine is set to ocrEngines.TESSERACT, initialize the tesseract engine.
-If ocrEngine is set to ocrEngines.GOOGLEVISION, initialize bcr reader given the ocr from google mobile vision text recognition API ([cordova-plugin-mobile-ocr](https://github.com/NeutrinosPlatform/cordova-plugin-mobile-ocr)).
+Then you can use `npm run build` to start the grunt-bundling.
 
-Where:
-- **STRING** `ocrEngine` the selected engine (see [ocrEngines](#ocrEngines)), default `ocrEngines.TESSERACT`.
-- **STRING** `crop`: the crop strategy (see [languages](#languages)), default `languages.GERMAN`.
-- **STRING** `language`: the language trained data (see [cropStrategy](#cropStrategy)), default `cropStrategy.SMART`.
-- **NUMBER** `width`: max internal width, default `2160`.
-- **NUMBER** `height`: max internal height, default `1440`.
-- **BOOLEAN** `QRScanner`: check first for VCard QR Code in image, default `true`.
-- **BOOLEAN** `dynamicInclude`: if the references are not included externally, default `true`.
-- Return Promise about JS loading.
+The bundle-Files and the training-files are now in the `dist`-Folder.
 
------------------
-
-### Recognize business card 
-
-```javascript
-bcr.recognize(base64image, displayResultCallback, displayProgressCallback, ocr);
-```
-
-Where:
-
-- **STRING** `base64image`: base64 string of the image to analyze.
-- **FUNCTION** `displayResultCallback(result_data)` function called when the analysis of the business card is completed.
-- **FUNCTION** `displayProgressCallback(progress_data)` function called after each progress in the analysis.
-- **OBJECT** `ocr`: object containing ocr results data from google mobile vision (optional, default ``).
-
-### Getter methods
-
-```javascript
-bcr.cropStrategy()
-```
-
-- Return the strategy label internally set.
-
-------------
-
-```javascript
-bcr.maxWidth()
-```
-
-- Return the value of the max width used internally to normalize the resolution.
-
-------------
-
-```javascript
-bcr.maxHeight()
-```
-
-- Return the value of the max height used internally to normalize the resolution.
-
-------------
-
-```javascript
-bcr.language()
-```
-
-- Return the value of the language trained data.
-
-------------
-
-```javascript
-bcr.tesseract()
-```
-
-- Return the initialized tesseract worker.
-
-------------
-
-```javascript
-bcr.ocr()
-```
-
-- Return the ocr passed.
-
-------------
-
-```javascript
-bcr.ocrEngine()
-```
-
-- Return the ocr engine selected.
-
-------------
-
-```javascript
-bcr.qrScanner()
-```
-
--if VCard QRScanner read is enabled.
-
-------------
-
-## Object
-
-### `result_data`
-JSON object in the format:
-
-```json
-{
-  "Company": "STRING",
-  "Email": "STRING",
-  "Address": {
-      "StreetAddress": "STRING",
-      "ZipCode": "STRING",
-      "Country": "STRING",
-      "Text": "STRING",
-      "City": "STRING"
-  },
-  "Web": "STRING",
-  "Phone": "STRING",
-  "Text": "STRING",
-  "Fax": "STRING",
-  "Job": "STRING",
-  "Mobile": "STRING",
-  "Name": {
-      "Text": "STRING",
-      "Surname": "STRING",
-      "Name": {
-          "FirstName": "STRING",
-          "Text": "STRING",
-          "MiddleName": "STRING",
-          "ExtraName": "STRING"
-      }
-  }
-}
-```
-
-### `progress_data`
-
-JSON object in the format:
-
-```json
-{
-  "section": "STRING",
-  "progress": {
-    "status": "STRING",
-    "progress": "FLOAT"
-  }
-}
-```
-
-## ENUM
-
-### languages
-
-- `languages.DANISH`: Danish language
-- `languages.GERMAN`: German language
-- `languages.ENGLISH`: English language
-- `languages.FRENCH`: French language
-- `languages.ITALIAN`: Italian language
-- `languages.SPANISH`: Spanish language
-- `languages.SWEDISH`: Swedish language
-
-### cropStrategy
-
-- `cropStrategy.SMART`: clean the image
-
-### ocrEngines
-
-- `ocrEngines.TESSERACT`: use the tesseract internal engine
-- `ocrEngines.GOOGLEVISION`: use Google Mobile Vision external engine
-
-## JS Libraries used 
-
-* [Tesseract.JS](https://github.com/naptha/tesseract.js) - 1.0.19<br/>
-Tesseract.js wraps an [emscripten](https://github.com/kripken/emscripten) [port](https://github.com/naptha/tesseract.js-core) of the [Tesseract](https://github.com/tesseract-ocr/tesseract) [OCR](https://en.wikipedia.org/wiki/Optical_character_recognition) Engine.
-
-## Required Cordova Plugins (in case of cordova project) 
-
-* [cordova-plugin-ionic-webview](https://github.com/ionic-team/cordova-plugin-ionic-webview/) - 4.0.0<br/>
-A Web View plugin for Cordova, focused on providing the highest performance experience for Ionic apps (but can be used with any Cordova app).
-
-### Contribution ###
-
-The current status of the library is alpha. Looking forward for your contribution to make the first release.
+When you don't want a minified-Version for testing, you can make adjustments in `gruntfile.js`.
