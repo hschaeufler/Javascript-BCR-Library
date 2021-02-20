@@ -111,10 +111,22 @@ export let bcr = (function () {
         document.body.appendChild(scriptTag);
     };
 
-    let executionPath = currentScriptPath();
-    let WORKER_PATH = executionPath + 'tesseract/worker.min.js';
-    let TESSERACT_PATH = executionPath + 'tesseract/tesseract-core.js';
-    let LANG_PATH = executionPath + 'data/';
+
+    // ************************************************************
+    // Customize this part
+    // ************************************************************
+    let executionPath = "";
+    if(window && window.location && window.location.href) {
+        executionPath = window.location.href;
+    } else {
+        executionPath = currentScriptPath();
+    }
+    let WORKER_PATH = executionPath + '/tesseract/worker.min.js';
+    let TESSERACT_PATH = executionPath + '/tesseract/tesseract-core.js';
+    let LANG_PATH = executionPath + '/data/';
+    // ************************************************************
+    // Customize this part
+    // ************************************************************
 
     // ************************************************************
     // public methods and properties
@@ -234,7 +246,12 @@ export let bcr = (function () {
                     };
                     nextLoad();
                 } else {
-                    resolve();
+                    if (ocrEngine === ocrEngines.TESSERACT) {
+                        // create engine and return promise
+                        createTesseractEngine();
+                    } else {
+                        resolve();
+                    }
                 }
 
             });

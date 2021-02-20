@@ -20,9 +20,9 @@ module.exports = function(grunt) {
                 * compress: false,
                 * beautify: true
                 * */
-                mangle: true,
-                compress: true,
-                beautify: false
+                mangle: false,
+                compress: false,
+                beautify: true
             },
             build: {
                 files: {
@@ -84,7 +84,8 @@ module.exports = function(grunt) {
             main: {
                 files: [
                     // includes files within path
-                    {expand: true, cwd: 'src/data/', src: ['**'], dest: 'dist/data', filter: 'isFile'}
+                    {expand: true, cwd: 'src/data/', src: ['**'], dest: 'dist/data', filter: 'isFile'},
+                    {expand: true, cwd: 'src/tesseract/', src: ['**'], dest: 'dist/tesseract', filter: 'isFile'}
                 ],
             },
         }
