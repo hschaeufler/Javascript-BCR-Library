@@ -47,6 +47,11 @@ export const ocrEngines = {
     GOOGLEVISION: "google"
 };
 
+export const tesseractVersions = {
+    V1: 1,
+    V2: 2
+};
+
 // ****************************************************************************
 // Language Datasets
 // ****************************************************************************
@@ -66,6 +71,7 @@ export let bcr = (function () {
     let defaultCropStrategy = cropStrategy.SMART;
     let defaultQRScanner = false;
     let defaultOcrEngine = ocrEngines.TESSERACT;
+    let defaultTesseractVersion = tesseractVersions.V1;
     let defaultDynamicInclude = false;
     let inputOcr = "";
     let tesseractWorker;
@@ -112,6 +118,7 @@ export let bcr = (function () {
     };
 
 
+
     // ************************************************************
     // Customize this part
     // ************************************************************
@@ -121,12 +128,53 @@ export let bcr = (function () {
     } else {
         executionPath = currentScriptPath();
     }
+
+    //Tesseract.js V1
     let WORKER_PATH = executionPath + '/tesseract/worker.min.js';
     let TESSERACT_PATH = executionPath + '/tesseract/tesseract-core.js';
     let LANG_PATH = executionPath + '/data/';
+
+    //Tesseract.js V2
+    let WORKER_PATH_V2 = executionPath + '/tesseractv2/worker.min.js';
+    let TESSERACT_PATH_V2 = executionPath + '/tesseractv2/tesseract-core.wasm.js';
+    let LANG_PATH_V2 = executionPath + '/tesseractv2-lang-data/';
     // ************************************************************
     // Customize this part
     // ************************************************************
+
+    // ************************************************************
+    // Tesseract V2 - Part
+    // ************************************************************
+    const { createWorker } = Tesseract;
+
+    let progressCallback = (m) => {
+        console.log(m);
+    };
+
+    //initalize Tesseract V2-Worker
+    async function initalizeWorker(language){
+        const worker = createWorker({
+            workerPath: WORKER_PATH_V2,
+            langPath: TESSERACT_PATH_V2,
+            corePath: LANG_PATH_V2,
+            logger: m => {
+                if(!progressCallback){
+                    progressCallback();
+                }
+            }
+        });
+        await worker.load();
+        await worker.loadLanguage(language);
+        await worker.initialize(language);
+        //siehe https://yvonnickfrin.dev/ocr-in-javascript-with-tesseract
+        // und https://github.com/tesseract-ocr/tesseract/blob/4.0.0/src/ccstruct/publictypes.h#L163
+        //AUTO
+        await worker.setParameters({
+            tessedit_pageseg_mode: PSM.AUTO,
+        });
+        return worker;
+    }
+
 
     // ************************************************************
     // public methods and properties
@@ -144,7 +192,7 @@ export let bcr = (function () {
          * @param {boolean} dynamicInclude use dynamic library js include.
          * @return {void} return promise
          */
-        initialize: function (ocrEngine = defaultOcrEngine, crop = defaultCropStrategy, language = defaultLanguage, width = defaultMaxWidth, height = defaultMaxHeight, qrScanner = defaultQRScanner, dynamicInclude = defaultDynamicInclude) {
+        initialize: function (ocrEngine = defaultOcrEngine, crop = defaultCropStrategy, language = defaultLanguage, width = defaultMaxWidth, height = defaultMaxHeight, qrScanner = defaultQRScanner, dynamicInclude = defaultDynamicInclude, tesseractVersion = defaultTesseractVersion) {
             return new Promise(resolve => {
 
                 // check crop_strategy
@@ -162,6 +210,9 @@ export let bcr = (function () {
                 // Check QR Scanner
                 if (typeof qrScanner === "undefined") qrScanner = defaultQRScanner;
 
+                // Check Tesseract Version
+                if (typeof tesseractVersion === "undefined") tesseractVersion = defaultTesseractVersion;
+
                 // assign defaults from init
                 defaultMaxWidth = width;
                 defaultMaxHeight = height;
@@ -169,6 +220,7 @@ export let bcr = (function () {
                 defaultLanguage = language;
                 defaultQRScanner = qrScanner;
                 defaultOcrEngine = ocrEngine;
+                defaultTesseractVersion = tesseractVersion;
 
                 // create tesseract engine
                 let createTesseractEngine = function () {
@@ -180,6 +232,15 @@ export let bcr = (function () {
 
                     // resolve after tesseract initialization
                     resolve();
+                };
+
+                let createTesseractV2Engine = function () {
+                    window.Worker = initalizeWorker(language).then(function (worker) {
+                        // resolve after tesseract initialization
+                        resolve();
+                    });
+
+
                 };
 
                 if (dynamicInclude) {
@@ -246,9 +307,11 @@ export let bcr = (function () {
                     };
                     nextLoad();
                 } else {
-                    if (ocrEngine === ocrEngines.TESSERACT) {
+                    if (ocrEngine === ocrEngines.TESSERACT && tesseractVersion === tesseractVersions.V1) {
                         // create engine and return promise
                         createTesseractEngine();
+                    } else if (ocrEngine === ocrEngines.TESSERACT && tesseractVersion === tesseractVersions.V2) {
+                        createTesseractV2Engine();
                     } else {
                         resolve();
                     }
@@ -272,6 +335,11 @@ export let bcr = (function () {
             // main gateway on engine's selection
             if (defaultOcrEngine === ocrEngines.TESSERACT) {
                 inputOcr = "";
+
+                //set progress-Callback directly for Version V2
+                if(defaultTesseractVersion = tesseractVersions.V2) {
+                    progressCallback = progress;
+                }
             } else {
                 inputOcr = ocr;
             }
@@ -339,6 +407,24 @@ export let bcr = (function () {
          */
         ocrEngine: function () {
             return defaultOcrEngine;
+        },
+
+        /**
+         * public property to expose default tesseract Version
+         * @return {string}
+         * the value of the chosen tesseractjs Library Version
+         */
+        tesseractVersion: function () {
+            return defaultTesseractVersion;
+        },
+
+        /**
+         * public property to get Tesseract V2 Worker
+         * @return {tesseractWorker}
+         * the initlaized TesseractJS V2 Worker
+         */
+        tesseractWorker: function () {
+            return tesseractWorker;
         },
 
         /**

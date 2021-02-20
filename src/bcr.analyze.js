@@ -21,6 +21,7 @@
  * limitations under the License.
  *
  */
+import {tesseractVersions} from "./bcr";
 
 //import QrScanner from "./qr/qr-scanner.min.js";
 //QrScanner.WORKER_PATH = './qr/qr-scanner-worker.min.js';
@@ -265,19 +266,25 @@ function analyzeOcr(ocr, callback, progress) {
 
 // perform ocr and analyze text
 function analyze(canvas, callback, progress) {
-    Tesseract.recognize(canvas, {
-        lang: bcr.language()
-    })
-        .progress(function (data) {
-            let result = {
-                section: "",
-                progress: {}
-            };
-            result.section = "OCR";
-            result.progress = data;
-            progress(result);
+    let worker;
+    if(bcr.tesseractVersion() == tesseractVersions.V2){
+        worker  = bcr.tesseractWorker().recognize(canvas);
+    } else {
+        worker = Tesseract.recognize(canvas, {
+            lang: bcr.language()
         })
-        .then(function (ocrResult) {
+            .progress(function (data) {
+                let result = {
+                    section: "",
+                    progress: {}
+                };
+                result.section = "OCR";
+                result.progress = data;
+                progress(result);
+            });
+    }
+
+    worker.then(function (ocrResult) {
 
             console.log(ocrResult);
 
