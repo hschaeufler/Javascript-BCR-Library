@@ -51,7 +51,7 @@ When not using any more, please clean-up (the Worker get's terminated). The perf
 ```
 If you want to use other trainings-data, change this part. All Files are downloaded form this git-Project [Trainungsdata](https://github.com/naptha/tessdata). 
 
-There you can get also Download Trainigsdata for other languages. But regard, you need also Data-Sets in your language for the BCR-Analyzing.
+There you can get also Trainigsdata for other languages. But regard, you need also Data-Sets in your language for the BCR-Analyzing.
 ```
 {expand: true, cwd: 'src/tesseractv2-lang-data/', src: ['**'], dest: 'dist/tesseractv2-lang-data', filter: 'isFile'},
 // Here you can change Trainingdata
