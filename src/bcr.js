@@ -130,14 +130,14 @@ export let bcr = (function () {
     }
 
     //Tesseract.js V1
-    let WORKER_PATH = executionPath + '/tesseract/worker.min.js';
-    let TESSERACT_PATH = executionPath + '/tesseract/tesseract-core.js';
-    let LANG_PATH = executionPath + '/data/';
+    let WORKER_PATH = executionPath + 'tesseract/worker.min.js';
+    let TESSERACT_PATH = executionPath + 'tesseract/tesseract-core.js';
+    let LANG_PATH = executionPath + 'data/';
 
     //Tesseract.js V2
-    let WORKER_PATH_V2 = executionPath + '/tesseractv2/worker.min.js';
-    let TESSERACT_PATH_V2 = executionPath + '/tesseractv2/tesseract-core.wasm.js';
-    let LANG_PATH_V2 = executionPath + '/tesseractv2-lang-data/';
+    let WORKER_PATH_V2 = executionPath + 'tesseractv2/worker.min.js';
+    let TESSERACT_PATH_V2 = executionPath + 'tesseractv2/tesseract-core.wasm.js';
+    let LANG_PATH_V2 = executionPath + 'tesseractv2-lang-data';
     // ************************************************************
     // Customize this part
     // ************************************************************
@@ -145,21 +145,31 @@ export let bcr = (function () {
     // ************************************************************
     // Tesseract V2 - Part
     // ************************************************************
-    const { createWorker } = Tesseract;
-
     let progressCallback = (m) => {
         console.log(m);
     };
 
+    let createTesseractV2Engine = function (language, callback) {
+        initalizeWorker(language).then(function (worker) {
+            tesseractWorker = worker;
+            // resolve after tesseract initialization
+            if(callback){
+                callback();
+            }
+        });
+    };
+
     //initalize Tesseract V2-Worker
     async function initalizeWorker(language){
+        const { createWorker, PSM } = Tesseract;
+
         const worker = createWorker({
             workerPath: WORKER_PATH_V2,
-            langPath: TESSERACT_PATH_V2,
-            corePath: LANG_PATH_V2,
+            langPath: LANG_PATH_V2,
+            corePath: TESSERACT_PATH_V2,
             logger: m => {
-                if(!progressCallback){
-                    progressCallback();
+                if(progressCallback){
+                    progressCallback(m);
                 }
             }
         });
@@ -234,15 +244,6 @@ export let bcr = (function () {
                     resolve();
                 };
 
-                let createTesseractV2Engine = function () {
-                    window.Worker = initalizeWorker(language).then(function (worker) {
-                        // resolve after tesseract initialization
-                        resolve();
-                    });
-
-
-                };
-
                 if (dynamicInclude) {
                     // scripts to include
                     let scriptsURL = [];
@@ -311,7 +312,7 @@ export let bcr = (function () {
                         // create engine and return promise
                         createTesseractEngine();
                     } else if (ocrEngine === ocrEngines.TESSERACT && tesseractVersion === tesseractVersions.V2) {
-                        createTesseractV2Engine();
+                        createTesseractV2Engine(language,resolve);
                     } else {
                         resolve();
                     }
@@ -337,8 +338,12 @@ export let bcr = (function () {
                 inputOcr = "";
 
                 //set progress-Callback directly for Version V2
-                if(defaultTesseractVersion = tesseractVersions.V2) {
+                if(defaultTesseractVersion === tesseractVersions.V2) {
                     progressCallback = progress;
+                    if(tesseractWorker==null){
+                        console.warn("Engine was not initilized - initalizing with default-Values");
+                        createTesseractV2Engine(defaultLanguage);
+                    }
                 }
             } else {
                 inputOcr = ocr;
@@ -371,6 +376,20 @@ export let bcr = (function () {
                 loadAndProcess(b64image, callback, progress);
             }
             console.log("recognizeBCR", "end");
+        },
+
+        /**
+         * Method for cleaning up (Terminating worker, when using tesseractjs2)
+         * @return {boolean} return
+         */
+        cleanUp: async function () {
+            const isClean = true;
+            if(tesseractWorker){
+                await tesseractWorker.terminate();
+                console.log("cleanup", "succesfull");
+            }
+
+            return isClean;
         },
 
         /**

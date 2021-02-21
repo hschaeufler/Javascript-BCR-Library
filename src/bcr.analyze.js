@@ -21,7 +21,6 @@
  * limitations under the License.
  *
  */
-import {tesseractVersions} from "./bcr";
 
 //import QrScanner from "./qr/qr-scanner.min.js";
 //QrScanner.WORKER_PATH = './qr/qr-scanner-worker.min.js';
@@ -268,7 +267,12 @@ function analyzeOcr(ocr, callback, progress) {
 function analyze(canvas, callback, progress) {
     let worker;
     if(bcr.tesseractVersion() == tesseractVersions.V2){
-        worker  = bcr.tesseractWorker().recognize(canvas);
+        worker  = bcr.tesseractWorker().recognize(canvas).then(function (result) {
+            if(result && result.data){
+                return result.data;
+            }
+            return result;
+        });
     } else {
         worker = Tesseract.recognize(canvas, {
             lang: bcr.language()
@@ -686,7 +690,9 @@ function cleanText(ocr) {
 
                 // replace the word in line
                 ocr.words[i].line.text = ocr.words[i].line.text.replace(backupWord, word);
-                ocr.words[i].paragraph.text = ocr.words[i].paragraph.text.replace(backupWord, word);
+                if(ocr && ocr.words[i] && ocr.words[i].paragraph && ocr.words[i].paragraph.text){
+                    ocr.words[i].paragraph.text = ocr.words[i].paragraph.text.replace(backupWord, word);
+                }
                 ocr.words[i].page.text = ocr.words[i].page.text.replace(backupWord, word);
                 ocr.text = ocr.text.replace(backupWord, word);
             }
