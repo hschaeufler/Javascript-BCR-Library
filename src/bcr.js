@@ -123,8 +123,14 @@ export let bcr = (function () {
     // Customize this part
     // ************************************************************
     let executionPath = "";
-    if(window && window.location && window.location.href) {
-        executionPath = window.location.href;
+    if(window && window.location && window.location.origin) {
+        executionPath = window.location.origin + "/";
+    } else if(window && window.location && window.location.href) {
+        let url = window.location.href
+        let arr = url ? url.split("/") : null;
+        let result = arr && arr.length >2 ? arr[0] + "//" + arr[2] : "";
+        executionPath = result + "/"
+
     } else {
         executionPath = currentScriptPath();
     }
