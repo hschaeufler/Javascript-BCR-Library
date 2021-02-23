@@ -96,7 +96,7 @@ const regex_mobile = [
 ];
 
 // Vcard parser new version
-function VCardParse(input) {
+export function VCardParse(input) {
     let card = initializeResult();
     input.split(/\r\n|\r|\n/).forEach(function (line) {
         let idxSeparator = line.indexOf(":");
@@ -159,7 +159,7 @@ function VCardParse(input) {
 }
 
 // MeCard parser
-function MeCardParse(input) {
+export function MeCardParse(input) {
     let card = initializeResult();
     input.split(";").forEach(function (line) {
         let idxSeparator = line.indexOf(":");
@@ -690,10 +690,15 @@ function cleanText(ocr) {
 
                 // replace the word in line
                 ocr.words[i].line.text = ocr.words[i].line.text.replace(backupWord, word);
+
                 if(ocr && ocr.words[i] && ocr.words[i].paragraph && ocr.words[i].paragraph.text){
                     ocr.words[i].paragraph.text = ocr.words[i].paragraph.text.replace(backupWord, word);
                 }
-                ocr.words[i].page.text = ocr.words[i].page.text.replace(backupWord, word);
+
+                if(ocr && ocr.words[i] && ocr.words[i].page && ocr.words[i].page.text){
+                    ocr.words[i].page.text = ocr.words[i].page.text.replace(backupWord, word);
+                }
+
                 ocr.text = ocr.text.replace(backupWord, word);
             }
         }
